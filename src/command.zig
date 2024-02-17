@@ -168,6 +168,9 @@ pub const clear_right = clearscr.clear_right;
 const printcmd = @import("commands/print.zig");
 pub const print = printcmd.print;
 pub const print_bold = printcmd.print_bold;
+pub const print_blink = printcmd.print_blink;
+pub const print_underline = printcmd.print_underline;
+pub const print_italic = printcmd.print_italic;
 
 const curscmd = @import("commands/cursor.zig");
 pub const hide_cursor = curscmd.hide_cursor;
@@ -184,3 +187,12 @@ pub const cursor_down = curscmd.cursor_down;
 const textcmd = @import("commands/text.zig");
 pub const start_bold = textcmd.start_bold;
 pub const end_bold = textcmd.end_bold;
+
+pub const start_blink = textcmd.start_blink;
+pub const end_blink = textcmd.end_blink;
+
+pub const start_underline = textcmd.start_underline;
+pub const end_underline = textcmd.end_underline;
+
+pub const start_italic = textcmd.start_italic;
+pub const end_italic = textcmd.end_italic;

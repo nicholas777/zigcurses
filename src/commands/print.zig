@@ -31,3 +31,21 @@ pub fn print_bold(term: *curses.Terminal, text: []const u8) CommandError!void {
     try print(term, text);
     try textcmd.end_bold(term);
 }
+
+pub fn print_blink(term: *curses.Terminal, text: []const u8) CommandError!void {
+    try textcmd.start_blink(term);
+    try print(term, text);
+    try textcmd.end_blink(term);
+}
+
+pub fn print_underline(term: *curses.Terminal, text: []const u8) CommandError!void {
+    try textcmd.start_underline(term);
+    try print(term, text);
+    try textcmd.end_underline(term);
+}
+
+pub fn print_italic(term: *curses.Terminal, text: []const u8) CommandError!void {
+    try textcmd.start_italic(term);
+    try print(term, text);
+    try textcmd.end_italic(term);
+}

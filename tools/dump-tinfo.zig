@@ -130,7 +130,10 @@ pub fn main() !void {
         try dump_terminal(term.tinfo);
     }
 
-    try curses.command.print_bold(term, "Hello, World!");
+    try curses.command.print_bold(term, "Hello, World!\n");
+    try curses.command.print_blink(term, "This text is blinking!\n");
+    try curses.command.print_underline(term, "Underlined!\n");
+    try curses.command.print_italic(term, "I am Italic\n");
 
     var buf: [20]u8 = undefined;
     _ = try std.io.getStdIn().reader().readUntilDelimiterOrEof(&buf, '\n');
