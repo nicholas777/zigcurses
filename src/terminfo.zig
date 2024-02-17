@@ -185,3 +185,7 @@ fn findFieldEnding(data: []const u8) ?usize {
         if (data[pos.? - 1] != '\\') return pos.?;
     }
 }
+
+pub const Parameter = union(enum) {
+    index: u32,
+};

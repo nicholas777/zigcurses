@@ -103,27 +103,37 @@ pub fn main() !void {
             .Bool, .BoolLong => {
                 try std.io.getStdOut().writer().print("{s}: {?}\n", .{
                     query.?,
-                    curses.util.getFieldBool(term, query.?, fieldtype.? == .BoolLong),
+                    curses.util.getFieldBool(term.tinfo, query.?, fieldtype.? == .BoolLong),
                 });
             },
             .Number, .NumberLong => {
                 try std.io.getStdOut().writer().print("{s}: {?}\n", .{
                     query.?,
-                    curses.util.getFieldNumber(term, query.?, fieldtype.? == .NumberLong),
+                    curses.util.getFieldNumber(term.tinfo, query.?, fieldtype.? == .NumberLong),
                 });
             },
             .String, .StringLong => {
-                try std.io.getStdOut().writer().print("{s}: {s}\n", .{
+                const str = curses.util.getFieldString(term.tinfo, query.?, fieldtype.? == .StringLong) orelse "Null";
+                var is_escape_seq: bool = false;
+
+                if (str[0] == 0o33) is_escape_seq = true;
+                try std.io.getStdOut().writer().print("{s}: {s}{s}\n", .{
                     query.?,
-                    curses.util.getFieldString(term, query.?, fieldtype.? == .StringLong) orelse "Null",
+                    if (is_escape_seq) "\\e" else str[0..1],
+                    str[1..],
                 });
             },
         }
     } else if (v_flag) {
-        try dump_terminal_verbose(term);
+        try dump_terminal_verbose(term.tinfo);
     } else {
-        try dump_terminal(term);
+        try dump_terminal(term.tinfo);
     }
+
+    //try curses.command.print_bold(term, "Hello, World!");
+
+    var buf: [20]u8 = undefined;
+    _ = try std.io.getStdIn().reader().readUntilDelimiterOrEof(&buf, '\n');
 
     defer curses.deinit(alloc);
 }
