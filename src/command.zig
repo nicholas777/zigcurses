@@ -27,15 +27,22 @@ pub const ParameterError = error{
     InvalidFormat,
 };
 
+const StackElement = struct {
+    is_literal: bool,
+    value: usize,
+};
+
 pub fn paramererizedCommand(command: []const u8, params: []const Parameter) !void {
     var buffered = std.io.bufferedWriter(std.io.getStdOut().writer());
     const bw = buffered.writer();
 
-    var curr_index: u32 = 0;
+    var stack: [20]StackElement = .{.{ .value = 0, .is_literal = false }} ** 20;
+    var top: u8 = 0;
 
     var i_flag: bool = false;
+    var if_end: usize = 0;
 
-    var i: u32 = 0;
+    var i: usize = 0;
     while (i < command.len) : (i += 1) {
         const char = command[i];
 
@@ -49,23 +56,44 @@ pub fn paramererizedCommand(command: []const u8, params: []const Parameter) !voi
 
             switch (command[i]) {
                 'c' => {
-                    const field: u8 = params[curr_index].char;
-                    try bw.writeByte(if (i_flag and curr_index < 2) field + 1 else field);
+                    const index = stack[top - 1].value;
+                    top -= 1;
+
+                    var value: u8 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        value = @intCast(index);
+                    } else {
+                        value = if (i_flag and stack[top].value < 2) params[index].char + 1 else params[index].char;
+                    }
+
+                    try bw.writeByte(value);
                 },
                 's' => {
-                    const field: []const u8 = params[curr_index].string;
-                    try bw.writeAll(field);
+                    const index = stack[top - 1].value;
+                    top -= 1;
+
+                    try bw.writeAll(params[index].string);
                 },
                 'd' => {
-                    const field: i32 = params[curr_index].number;
+                    const index = stack[top - 1].value;
+                    top -= 1;
+
+                    var value: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        value = @intCast(index);
+                    } else {
+                        value = if (i_flag and stack[top - 1].value < 2) params[index].number + 1 else params[index].number;
+                    }
 
                     var buf: [12]u8 = undefined;
-                    try bw.writeAll(try std.fmt.bufPrint(&buf, "{d}", .{field}));
+                    try bw.writeAll(try std.fmt.bufPrint(&buf, "{d}", .{value}));
                 },
                 'p' => {
                     i += 1;
-                    curr_index = command[i] - '1';
-                    if (params.len < curr_index + 1)
+                    stack[top] = .{ .is_literal = false, .value = command[i] - '1' };
+                    top += 1;
+
+                    if (params.len < stack[top - 1].value + 1)
                         return ParameterError.TooFewParameters;
                 },
                 'P' => {},
@@ -75,10 +103,51 @@ pub fn paramererizedCommand(command: []const u8, params: []const Parameter) !voi
                     i_flag = true;
                 },
                 '?' => {
-                    i += 1;
-                    const expr_end = std.mem.indexOfPos(u8, command, i, "%t") orelse return ParameterError.InvalidFormat;
-                    _ = expr_end;
+                    if_end = std.mem.indexOfPos(u8, command, i + 1, "%;") orelse unreachable; // return error.InvalidFormat;
                 },
+                't' => {
+                    var field: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field = @intCast(stack[top - 1].value);
+                    } else {
+                        field = params[stack[top - 1].value].number;
+                    }
+                    top -= 1;
+
+                    if (field == 0) {
+                        const else_stmt = std.mem.indexOfPos(u8, command, i, "%e");
+                        if (else_stmt == null) {
+                            i = if_end + 1;
+                        } else {
+                            i = if (else_stmt.? > if_end) if_end + 1 else else_stmt.? + 1;
+                        }
+                    }
+                },
+                'e' => {
+                    i = if_end + 1;
+                },
+                ';' => {},
+                '|' => {
+                    var field1: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field1 = @intCast(stack[top - 1].value);
+                    } else {
+                        field1 = params[stack[top - 1].value].number;
+                    }
+
+                    var field2: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field2 = @intCast(stack[top - 1].value);
+                    } else {
+                        field2 = params[stack[top - 1].value].number;
+                    }
+
+                    top -= 2;
+
+                    stack[top] = .{ .is_literal = true, .value = @intCast(field1 | field2) };
+                    top += 1;
+                },
+                '&' => {},
                 else => {
                     return ParameterError.InvalidFormat;
                 },

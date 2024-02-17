@@ -130,7 +130,7 @@ pub fn main() !void {
         try dump_terminal(term.tinfo);
     }
 
-    //try curses.command.print_bold(term, "Hello, World!");
+    try curses.command.print_bold(term, "Hello, World!");
 
     var buf: [20]u8 = undefined;
     _ = try std.io.getStdIn().reader().readUntilDelimiterOrEof(&buf, '\n');
