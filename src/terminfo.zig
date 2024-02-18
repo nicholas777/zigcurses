@@ -63,6 +63,8 @@ pub const TerminalInfo = struct {
 pub const TerminfoMagic16 = 0x11a;
 pub const TerminfoMagic32 = 0x21e;
 
+pub const NumberAbsent = -1;
+
 pub const TerminfoParseError = error{
     InvalidMagic,
     OutOfMemory,

@@ -32,7 +32,7 @@ const StackElement = struct {
     value: usize,
 };
 
-pub fn paramererizedCommand(command: []const u8, params: []const Parameter) !void {
+pub fn parameterizedCommand(command: []const u8, params: []const Parameter) !void {
     var buffered = std.io.bufferedWriter(std.io.getStdOut().writer());
     const bw = buffered.writer();
 
@@ -79,10 +79,10 @@ pub fn paramererizedCommand(command: []const u8, params: []const Parameter) !voi
                     top -= 1;
 
                     var value: i32 = undefined;
-                    if (stack[top - 1].is_literal) {
+                    if (stack[top].is_literal) {
                         value = @intCast(index);
                     } else {
-                        value = if (i_flag and stack[top - 1].value < 2) params[index].number + 1 else params[index].number;
+                        value = if (i_flag and index < 2) params[index].number + 1 else params[index].number;
                     }
 
                     var buf: [12]u8 = undefined;
@@ -136,10 +136,10 @@ pub fn paramererizedCommand(command: []const u8, params: []const Parameter) !voi
                     }
 
                     var field2: i32 = undefined;
-                    if (stack[top - 1].is_literal) {
-                        field2 = @intCast(stack[top - 1].value);
+                    if (stack[top - 2].is_literal) {
+                        field2 = @intCast(stack[top - 2].value);
                     } else {
-                        field2 = params[stack[top - 1].value].number;
+                        field2 = params[stack[top - 2].value].number;
                     }
 
                     top -= 2;
@@ -147,7 +147,198 @@ pub fn paramererizedCommand(command: []const u8, params: []const Parameter) !voi
                     stack[top] = .{ .is_literal = true, .value = @intCast(field1 | field2) };
                     top += 1;
                 },
-                '&' => {},
+                '&' => {
+                    var field1: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field1 = @intCast(stack[top - 1].value);
+                    } else {
+                        field1 = params[stack[top - 1].value].number;
+                    }
+
+                    var field2: i32 = undefined;
+                    if (stack[top - 2].is_literal) {
+                        field2 = @intCast(stack[top - 2].value);
+                    } else {
+                        field2 = params[stack[top - 2].value].number;
+                    }
+
+                    top -= 2;
+
+                    stack[top] = .{ .is_literal = true, .value = @intCast(field1 & field2) };
+                    top += 1;
+                },
+                '+' => {
+                    var field1: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field1 = @intCast(stack[top - 1].value);
+                    } else {
+                        field1 = params[stack[top - 1].value].number;
+                    }
+
+                    var field2: i32 = undefined;
+                    if (stack[top - 2].is_literal) {
+                        field2 = @intCast(stack[top - 2].value);
+                    } else {
+                        field2 = params[stack[top - 2].value].number;
+                    }
+
+                    top -= 2;
+
+                    stack[top] = .{ .is_literal = true, .value = @intCast(field1 + field2) };
+                    top += 1;
+                },
+                '-' => {
+                    var field1: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field1 = @intCast(stack[top - 1].value);
+                    } else {
+                        field1 = params[stack[top - 1].value].number;
+                    }
+
+                    var field2: i32 = undefined;
+                    if (stack[top - 2].is_literal) {
+                        field2 = @intCast(stack[top - 2].value);
+                    } else {
+                        field2 = params[stack[top - 2].value].number;
+                    }
+
+                    top -= 2;
+
+                    stack[top] = .{ .is_literal = true, .value = @intCast(field1 - field2) };
+                    top += 1;
+                },
+                '*' => {
+                    var field1: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field1 = @intCast(stack[top - 1].value);
+                    } else {
+                        field1 = params[stack[top - 1].value].number;
+                    }
+
+                    var field2: i32 = undefined;
+                    if (stack[top - 2].is_literal) {
+                        field2 = @intCast(stack[top - 2].value);
+                    } else {
+                        field2 = params[stack[top - 2].value].number;
+                    }
+
+                    top -= 2;
+
+                    stack[top] = .{ .is_literal = true, .value = @intCast(field1 * field2) };
+                    top += 1;
+                },
+                '/' => {
+                    var field1: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field1 = @intCast(stack[top - 1].value);
+                    } else {
+                        field1 = params[stack[top - 1].value].number;
+                    }
+
+                    var field2: i32 = undefined;
+                    if (stack[top - 2].is_literal) {
+                        field2 = @intCast(stack[top - 2].value);
+                    } else {
+                        field2 = params[stack[top - 2].value].number;
+                    }
+
+                    top -= 2;
+
+                    // Dividing by 0
+                    if (field2 == 0) return error.InvalidParameters;
+                    stack[top] = .{ .is_literal = true, .value = @intCast(@divFloor(field1, field2)) };
+                    top += 1;
+                },
+                'm' => {
+                    var field1: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field1 = @intCast(stack[top - 1].value);
+                    } else {
+                        field1 = params[stack[top - 1].value].number;
+                    }
+
+                    var field2: i32 = undefined;
+                    if (stack[top - 2].is_literal) {
+                        field2 = @intCast(stack[top - 2].value);
+                    } else {
+                        field2 = params[stack[top - 2].value].number;
+                    }
+
+                    top -= 2;
+
+                    if (field2 < 0) return error.InvalidParameters;
+                    stack[top] = .{ .is_literal = true, .value = @intCast(@mod(field1, field2)) };
+                    top += 1;
+                },
+                '=' => {
+                    var field1: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field1 = @intCast(stack[top - 1].value);
+                    } else {
+                        field1 = params[stack[top - 1].value].number;
+                    }
+
+                    var field2: i32 = undefined;
+                    if (stack[top - 2].is_literal) {
+                        field2 = @intCast(stack[top - 2].value);
+                    } else {
+                        field2 = params[stack[top - 2].value].number;
+                    }
+
+                    top -= 2;
+
+                    stack[top] = .{ .is_literal = true, .value = if (field1 == field2) 1 else 0 };
+                    top += 1;
+                },
+                '<' => {
+                    var field1: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field1 = @intCast(stack[top - 1].value);
+                    } else {
+                        field1 = params[stack[top - 1].value].number;
+                    }
+
+                    var field2: i32 = undefined;
+                    if (stack[top - 2].is_literal) {
+                        field2 = @intCast(stack[top - 2].value);
+                    } else {
+                        field2 = params[stack[top - 2].value].number;
+                    }
+
+                    top -= 2;
+
+                    stack[top] = .{ .is_literal = true, .value = if (field1 < field2) 1 else 0 };
+                    top += 1;
+                },
+                '>' => {
+                    var field1: i32 = undefined;
+                    if (stack[top - 1].is_literal) {
+                        field1 = @intCast(stack[top - 1].value);
+                    } else {
+                        field1 = params[stack[top - 1].value].number;
+                    }
+
+                    var field2: i32 = undefined;
+                    if (stack[top - 2].is_literal) {
+                        field2 = @intCast(stack[top - 2].value);
+                    } else {
+                        field2 = params[stack[top - 2].value].number;
+                    }
+
+                    top -= 2;
+
+                    stack[top] = .{ .is_literal = true, .value = if (field1 > field2) 1 else 0 };
+                    top += 1;
+                },
+                '{' => {
+                    const closing_bracket = std.mem.indexOfPos(u8, command, i, "}") orelse return error.InvalidFormat;
+                    const literal = std.fmt.parseInt(i32, command[i + 1 .. closing_bracket], 10) catch return error.InvalidFormat;
+
+                    stack[top] = .{ .is_literal = true, .value = @intCast(literal) };
+                    top += 1;
+
+                    i += closing_bracket - i;
+                },
                 else => {
                     return ParameterError.InvalidFormat;
                 },
@@ -196,3 +387,10 @@ pub const end_underline = textcmd.end_underline;
 
 pub const start_italic = textcmd.start_italic;
 pub const end_italic = textcmd.end_italic;
+
+const colorcmd = @import("commands/colors.zig");
+pub const set_background = colorcmd.set_background;
+pub const set_foreground = colorcmd.set_foreground;
+pub const set_colors = colorcmd.set_colors;
+
+pub const reset_colors = colorcmd.reset_colors;

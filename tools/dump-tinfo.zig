@@ -15,8 +15,12 @@ fn dump_terminal(info: *curses.TerminalInfo) !void {
     }
 
     for (info.strings, 0..) |value, i| {
-        if (value != null)
-            try stdout.print("STRING - {s}: {s}\n", .{ fields.str_names_long[i], value.? });
+        if (value != null) {
+            try stdout.print(
+                "STRING - {s}: {s}{s}\n",
+                .{ fields.str_names_long[i], if (value.?[0] == 0x1b) "\\e" else value.?[0..1], value.?[1..] },
+            );
+        }
     }
 }
 
@@ -32,7 +36,14 @@ fn dump_terminal_verbose(info: *curses.TerminalInfo) !void {
     }
 
     for (info.strings, 0..) |value, i| {
-        try stdout.print("STRING - {s}: {s}\n", .{ fields.str_names_long[i], value orelse "null" });
+        if (value == null) {
+            try stdout.print("STRING - {s}: null", .{fields.str_names_long[i]});
+        } else {
+            try stdout.print(
+                "STRING - {s}: {s}{s}\n",
+                .{ fields.str_names_long[i], if (value.?[0] == 0x1b) "\\e" else value.?[0..1], value.?[1..] },
+            );
+        }
     }
 }
 
@@ -85,7 +96,8 @@ pub fn main() !void {
         expect_arg = false;
     }
 
-    const term = try curses.init(alloc, terminal);
+    const term = try curses.new_term(alloc, terminal);
+    const screen = try curses.setup_screen(alloc, term);
 
     if (q_flag) {
         if (query == null) {
@@ -130,15 +142,8 @@ pub fn main() !void {
         try dump_terminal(term.tinfo);
     }
 
-    try curses.command.print_bold(term, "Hello, World!\n");
-    try curses.command.print_blink(term, "This text is blinking!\n");
-    try curses.command.print_underline(term, "Underlined!\n");
-    try curses.command.print_italic(term, "I am Italic\n");
-
-    var buf: [20]u8 = undefined;
-    _ = try std.io.getStdIn().reader().readUntilDelimiterOrEof(&buf, '\n');
-
-    defer curses.deinit(alloc);
+    curses.free_term(alloc, screen.term);
+    curses.free_screen(alloc, screen);
 }
 
 const usage =
