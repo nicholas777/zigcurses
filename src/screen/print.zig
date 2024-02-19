@@ -22,7 +22,23 @@ pub fn print(screen: *curses.Screen, msg: []const u8) void {
 
 const cmd = @import("../screen_command.zig");
 
-pub fn print_at(screen: *curses.Screen, msg: []const u8, x: u32, y: u32) void {
+pub fn print_at(screen: *curses.Screen, msg: []const u8, x: usize, y: usize) void {
     cmd.move_cursor(screen, x, y);
     print(screen, msg);
+}
+
+pub fn toggle_bold(screen: *curses.Screen) void {
+    screen.buffer[screen.cursor_y][screen.cursor_x] &= ~cmd.set_bold;
+}
+
+pub fn print_bold(screen: *curses.Screen, msg: []const u8) void {
+    toggle_bold(screen);
+    print(screen, msg);
+    toggle_bold(screen);
+}
+
+pub fn print_bold_at(screen: *curses.Screen, msg: []const u8, x: usize, y: usize) void {
+    toggle_bold(screen);
+    print_at(screen, msg, x, y);
+    toggle_bold(screen);
 }

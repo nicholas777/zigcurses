@@ -97,7 +97,15 @@ pub fn main() !void {
     }
 
     const term = try curses.new_term(alloc, terminal);
-    const screen = try curses.setup_screen(alloc, term);
+
+    const name_pipe = std.mem.indexOf(u8, term.tinfo.names, "|");
+
+    var term_name: []const u8 = undefined;
+    if (name_pipe) |pos| {
+        term_name = term.tinfo.names[0..pos];
+    } else {
+        term_name = term.tinfo.names;
+    }
 
     if (q_flag) {
         if (query == null) {
@@ -110,6 +118,8 @@ pub fn main() !void {
             std.io.getStdOut().writer().print("Unknown field \"{s}\"\n", .{query.?}) catch return;
             return;
         }
+
+        try std.io.getStdOut().writer().print("Terminal: {s}\n", .{term_name});
 
         switch (fieldtype.?) {
             .Bool, .BoolLong => {
@@ -137,28 +147,14 @@ pub fn main() !void {
             },
         }
     } else if (v_flag) {
+        try std.io.getStdOut().writer().print("Terminal: {s}\n", .{term_name});
         try dump_terminal_verbose(term.tinfo);
     } else {
+        try std.io.getStdOut().writer().print("Terminal: {s}\n", .{term_name});
         try dump_terminal(term.tinfo);
     }
 
-    curses.cmd.clear_screen(screen);
-    curses.cmd.print_at(screen, "Hello there", 10, 10);
-    curses.cmd.cursor_up(screen);
-    curses.cmd.print(screen, "I am above");
-    curses.cmd.clear_area(screen, 16, 9, 7, 3);
-    curses.cmd.print(screen, " I am hopefully red");
-    curses.cmd.color_area(screen, 10, 10, 25, 5, .Blue, .Blue);
-
-    try curses.draw_screen(screen);
-
-    var buf: [40]u8 = undefined;
-    _ = try std.io.getStdIn().reader().readUntilDelimiter(&buf, '\n');
-
-    curses.reset_colors(screen);
-
-    curses.free_term(alloc, screen.term);
-    curses.free_screen(alloc, screen);
+    curses.free_term(alloc, term);
 }
 
 const usage =

@@ -1,5 +1,5 @@
 pub const set_color = (1 << 7) << 8;
-pub const color_mask = 0x0700;
+pub const set_bold = (1 << 6) << 8;
 
 const clearcmd = @import("screen/clear.zig");
 pub const clear_screen = clearcmd.clear_screen;
@@ -27,3 +27,4 @@ pub const set_colors = colorcmd.set_colors;
 
 pub const color_range = colorcmd.color_range;
 pub const color_area = colorcmd.color_area;
+pub const color_line = colorcmd.color_line;

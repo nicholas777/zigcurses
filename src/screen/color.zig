@@ -22,7 +22,7 @@ pub fn set_colors(screen: *curses.Screen, bg: curses.Color, fg: curses.Color) vo
 
 const std = @import("std");
 
-pub fn color_range(screen: *curses.Screen, length: u32, bg: curses.Color, fg: curses.Color) void {
+pub fn color_range(screen: *curses.Screen, length: usize, bg: curses.Color, fg: curses.Color) void {
     const old_x = screen.cursor_x;
     const old_y = screen.cursor_y;
 
@@ -32,33 +32,43 @@ pub fn color_range(screen: *curses.Screen, length: u32, bg: curses.Color, fg: cu
     set_colors(screen, bg, fg);
 
     const left_on_line = screen.columns - screen.cursor_x;
-    if (left_on_line >= length) {
+    if (left_on_line > length) {
         screen.cursor_x += length;
+    } else if (left_on_line == length) {
+        if (screen.cursor_y + 1 >= screen.lines) {
+            screen.cursor_x += length;
+            std.debug.print("Hello 1, x: {}\n", .{screen.cursor_x});
+        } else {
+            screen.cursor_x = 0;
+            screen.cursor_y += 1;
+            std.debug.print("Hello 2\n", .{});
+        }
     } else {
-        screen.cursor_y += @intCast(length / screen.columns + 1);
-        screen.cursor_x = length - @as(u32, @intCast(left_on_line));
+        screen.cursor_y += length / screen.columns + 1;
+        screen.cursor_x = length - left_on_line;
     }
 
+    std.debug.print("X: {}, y: {}\n", .{ screen.cursor_x, screen.cursor_y });
     set_colors(screen, old_bg, old_fg);
     cmd.move_cursor(screen, old_x, old_y);
 }
 
 pub fn color_area(
     screen: *curses.Screen,
-    x: u32,
-    y: u32,
-    width: u32,
-    height: u32,
+    x: usize,
+    y: usize,
+    width: usize,
+    height: usize,
     bg: curses.Color,
     fg: curses.Color,
 ) void {
-    if (x + width + 1 > screen.columns) return;
-    if (y + height + 1 > screen.lines) return;
+    if (x + width > screen.columns) return;
+    if (y + height > screen.lines) return;
 
     const orig_x = screen.cursor_x;
     const orig_y = screen.cursor_y;
 
-    var i: u32 = y;
+    var i: usize = y;
     while (i < y + height) : (i += 1) {
         screen.cursor_y = i;
         screen.cursor_x = x;
@@ -68,4 +78,13 @@ pub fn color_area(
 
     screen.cursor_x = orig_x;
     screen.cursor_y = orig_y;
+}
+
+pub fn color_line(
+    screen: *curses.Screen,
+    line: usize,
+    bg: curses.Color,
+    fg: curses.Color,
+) void {
+    color_area(screen, 0, line, screen.columns, 1, bg, fg);
 }

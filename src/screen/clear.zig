@@ -40,13 +40,13 @@ pub fn clear_left(screen: *curses.Screen) void {
     screen.buffer[screen.cursor_y][0] = ' ';
 }
 
-pub fn clear_area(screen: *curses.Screen, x: u32, y: u32, width: u32, height: u32) void {
+pub fn clear_area(screen: *curses.Screen, x: usize, y: usize, width: usize, height: usize) void {
     if (x + width + 1 > screen.columns) return;
     if (y + height + 1 > screen.lines) return;
 
-    var i: u32 = y;
+    var i: usize = y;
     while (i < y + height) : (i += 1) {
-        var j: u32 = x;
+        var j: usize = x;
         while (j < x + width) : (j += 1) {
             screen.buffer[i][j] = ' ';
         }

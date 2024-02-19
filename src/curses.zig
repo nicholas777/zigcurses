@@ -32,9 +32,9 @@ pub const Screen = struct {
     columns: usize,
     lines: usize,
     term: *Terminal,
-    buffer: [][]u16 = undefined,
-    cursor_x: u32,
-    cursor_y: u32,
+    buffer: [][]u32 = undefined,
+    cursor_x: usize,
+    cursor_y: usize,
     text_attribs: [9]u8 = .{0} ** 9,
     current_bg: Color = Color.Black,
     current_fg: Color = Color.White,
@@ -114,15 +114,22 @@ pub fn setup_screen(alloc: std.mem.Allocator, terminal: *Terminal) !*Screen {
         // screen.lines = @intCast(tinfo_lines);
     }
 
-    screen.buffer = try alloc.alloc([]u16, screen.lines);
+    screen.buffer = try alloc.alloc([]u32, screen.lines);
     var i: usize = 0;
-    while (i < screen.buffer.len) : (i += 1) {
-        screen.buffer[i] = try alloc.alloc(u16, screen.columns);
+    while (i < screen.buffer.len - 1) : (i += 1) {
+        screen.buffer[i] = try alloc.alloc(u32, screen.columns);
 
         var j: usize = 0;
         while (j < screen.buffer[i].len) : (j += 1) {
             screen.buffer[i][j] = ' ';
         }
+    }
+
+    // We allocate one more space so that we can apply modifiers to the last character of the terminal
+    screen.buffer[screen.lines - 1] = try alloc.alloc(u32, screen.columns + 1);
+    var j: usize = 0;
+    while (j < screen.columns + 1) : (j += 1) {
+        screen.buffer[screen.lines - 1][j] = ' ';
     }
 
     screen.term.automatic_wrap = terminal.tinfo.bools[tinfo_fields.bool_auto_right_margin];

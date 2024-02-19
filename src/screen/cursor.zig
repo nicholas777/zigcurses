@@ -1,6 +1,6 @@
 const curses = @import("../curses.zig");
 
-pub fn move_cursor(screen: *curses.Screen, x: u32, y: u32) void {
+pub fn move_cursor(screen: *curses.Screen, x: usize, y: usize) void {
     if (y + 1 > screen.lines or x + 1 > screen.columns) return;
 
     screen.cursor_x = x;
