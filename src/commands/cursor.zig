@@ -30,9 +30,6 @@ pub fn move_cursor(screen: *curses.Screen, new_x: i32, new_y: i32) CommandError!
         term.tinfo.strings[fields.str_cursor_address].?,
         &.{ .{ .number = new_x }, .{ .number = new_y } },
     ) catch return error.IOError;
-
-    screen.cursor_x = @intCast(new_x);
-    screen.cursor_y = @intCast(new_y);
 }
 
 pub fn cursor_home(screen: *curses.Screen) CommandError!void {
@@ -41,8 +38,6 @@ pub fn cursor_home(screen: *curses.Screen) CommandError!void {
         return error.CapabilityUnsupported;
 
     _ = std.io.getStdOut().write(term.tinfo.strings[fields.str_cursor_home].?) catch return error.IOError;
-    screen.cursor_y = 0;
-    screen.cursor_x = 0;
 }
 
 pub fn cursor_up(screen: *curses.Screen) CommandError!void {
@@ -51,7 +46,6 @@ pub fn cursor_up(screen: *curses.Screen) CommandError!void {
         return error.CapabilityUnsupported;
 
     _ = std.io.getStdOut().write(term.tinfo.strings[fields.str_cursor_up].?) catch return error.IOError;
-    screen.cursor_y -= 1;
 }
 
 // For some reason the cursor_down takes us to the first column on some terminals
@@ -66,7 +60,6 @@ pub fn cursor_left(screen: *curses.Screen) CommandError!void {
         return error.CapabilityUnsupported;
 
     _ = std.io.getStdOut().write(term.tinfo.strings[fields.str_cursor_left].?) catch return error.IOError;
-    screen.cursor_x -= 1;
 }
 
 pub fn cursor_right(screen: *curses.Screen) CommandError!void {
@@ -75,5 +68,4 @@ pub fn cursor_right(screen: *curses.Screen) CommandError!void {
         return error.CapabilityUnsupported;
 
     _ = std.io.getStdOut().write(term.tinfo.strings[fields.str_cursor_right].?) catch return error.IOError;
-    screen.cursor_x += 1;
 }

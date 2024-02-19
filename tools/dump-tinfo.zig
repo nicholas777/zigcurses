@@ -142,6 +142,21 @@ pub fn main() !void {
         try dump_terminal(term.tinfo);
     }
 
+    curses.cmd.clear_screen(screen);
+    curses.cmd.print_at(screen, "Hello there", 10, 10);
+    curses.cmd.cursor_up(screen);
+    curses.cmd.print(screen, "I am above");
+    curses.cmd.clear_area(screen, 16, 9, 7, 3);
+    curses.cmd.print(screen, " I am hopefully red");
+    curses.cmd.color_area(screen, 10, 10, 25, 5, .Blue, .Blue);
+
+    try curses.draw_screen(screen);
+
+    var buf: [40]u8 = undefined;
+    _ = try std.io.getStdIn().reader().readUntilDelimiter(&buf, '\n');
+
+    curses.reset_colors(screen);
+
     curses.free_term(alloc, screen.term);
     curses.free_screen(alloc, screen);
 }

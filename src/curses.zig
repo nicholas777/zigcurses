@@ -2,8 +2,6 @@ const std = @import("std");
 const terminfo = @import("terminfo.zig");
 const common = @import("common.zig");
 
-pub const AnsiColor = common.AnsiColor;
-pub const HpColor = common.HpColor;
 pub const Color = common.Color;
 
 pub const util = @import("utils.zig");
@@ -13,6 +11,8 @@ const command = @import("command.zig");
 
 const draw = @import("draw_screen.zig");
 pub const draw_screen = draw.draw_screen;
+
+pub const cmd = @import("screen_command.zig");
 
 pub const InitError = error{
     NoTermEnvVar,
@@ -32,10 +32,12 @@ pub const Screen = struct {
     columns: usize,
     lines: usize,
     term: *Terminal,
-    buffer: [][]u8 = undefined,
+    buffer: [][]u16 = undefined,
     cursor_x: u32,
     cursor_y: u32,
     text_attribs: [9]u8 = .{0} ** 9,
+    current_bg: Color = Color.Black,
+    current_fg: Color = Color.White,
 };
 
 pub fn new_term(alloc: std.mem.Allocator, custom_term: ?[]const u8) !*Terminal {
@@ -80,37 +82,47 @@ pub fn new_term(alloc: std.mem.Allocator, custom_term: ?[]const u8) !*Terminal {
 
 pub fn setup_screen(alloc: std.mem.Allocator, terminal: *Terminal) !*Screen {
     const terminal_info = terminal.tinfo;
+    _ = terminal_info;
 
     var screen: *Screen = try alloc.create(Screen);
     screen.term = terminal;
     screen.cursor_x = 0;
     screen.cursor_y = 0;
+    screen.current_bg = .Black;
+    screen.current_fg = .White;
 
     const lines = std.os.getenv("LINES");
-    if (lines) |value| {
-        screen.lines = try std.fmt.parseInt(u64, value, 10);
-    } else {
-        const tinfo_lines = terminal_info.numbers[tinfo_fields.num_lines];
-        if (tinfo_lines < 0) return InitError.NoTermSizeSpecifier;
-
-        screen.lines = @intCast(tinfo_lines);
-    }
-
     const cols = std.os.getenv("COLUMNS");
-    if (cols) |value| {
-        screen.columns = try std.fmt.parseInt(u64, value, 10);
-    } else {
-        const tinfo_cols = terminal_info.numbers[tinfo_fields.num_columns];
-        if (tinfo_cols < 0) return InitError.NoTermSizeSpecifier;
 
-        screen.columns = @intCast(tinfo_cols);
+    if (lines != null) {
+        screen.lines = try std.fmt.parseInt(u64, lines.?, 10);
+        screen.columns = try std.fmt.parseInt(u64, cols.?, 10);
+    } else {
+        var size: std.os.linux.winsize = .{ .ws_col = 0, .ws_row = 0, .ws_xpixel = 0, .ws_ypixel = 0 };
+        _ = std.os.linux.ioctl(
+            std.io.getStdOut().handle,
+            std.os.linux.T.IOCGWINSZ,
+            @intFromPtr(&size),
+        );
+
+        screen.lines = size.ws_row;
+        screen.columns = size.ws_col;
+
+        // const tinfo_lines = terminal_info.numbers[tinfo_fields.num_lines];
+        // if (tinfo_lines < 0) return InitError.NoTermSizeSpecifier;
+
+        // screen.lines = @intCast(tinfo_lines);
     }
 
-    screen.buffer = try alloc.alloc([]u8, screen.lines);
+    screen.buffer = try alloc.alloc([]u16, screen.lines);
     var i: usize = 0;
     while (i < screen.buffer.len) : (i += 1) {
-        screen.buffer[i] = try alloc.alloc(u8, screen.columns);
-        @memset(screen.buffer[i], ' ');
+        screen.buffer[i] = try alloc.alloc(u16, screen.columns);
+
+        var j: usize = 0;
+        while (j < screen.buffer[i].len) : (j += 1) {
+            screen.buffer[i][j] = ' ';
+        }
     }
 
     screen.term.automatic_wrap = terminal.tinfo.bools[tinfo_fields.bool_auto_right_margin];
@@ -147,6 +159,10 @@ pub fn free_screen(alloc: std.mem.Allocator, screen: *Screen) void {
     alloc.free(screen.buffer);
 }
 
+pub fn reset_colors(screen: *Screen) void {
+    command.reset_colors(screen) catch return;
+}
+
 pub fn deinit(alloc: std.mem.Allocator, screen: *Screen) void {
     command.clear_screen(screen) catch |err| switch (err) {
         error.CapabilityUnsupported => {
@@ -155,6 +171,8 @@ pub fn deinit(alloc: std.mem.Allocator, screen: *Screen) void {
         },
         else => {},
     };
+
+    command.reset_colors(screen);
 
     free_term(alloc, screen.term);
     free_screen(alloc, screen);

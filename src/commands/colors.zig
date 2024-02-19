@@ -6,7 +6,7 @@ const CommandError = command.CommandError;
 const curses = @import("../curses.zig");
 const std = @import("std");
 
-pub fn set_background(screen: *curses.Screen, bg: u8) CommandError!void {
+pub fn set_background(screen: *curses.Screen, bg: common.Color) CommandError!void {
     const term = screen.term;
     switch (term.color_mode) {
         .Ansi => {

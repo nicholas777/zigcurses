@@ -6,22 +6,11 @@ const curses = @import("../curses.zig");
 const std = @import("std");
 
 pub fn print(screen: *curses.Screen, str: []const u8) CommandError!void {
+    _ = screen;
+
     const stdio = std.io.getStdOut();
     const written = stdio.writer().write(str) catch return error.IOError;
     if (written != str.len) return error.IOError;
-
-    const columns: u32 = @intCast(screen.columns);
-    const left_in_column = columns - screen.cursor_x;
-    const rows_to_move = written / columns;
-    const delta_x = written % columns;
-
-    if (delta_x <= left_in_column) {
-        screen.cursor_x += @intCast(delta_x);
-        screen.cursor_y += @intCast(rows_to_move);
-    } else {
-        screen.cursor_x = @intCast(delta_x - left_in_column);
-        screen.cursor_y += @intCast(rows_to_move + 1);
-    }
 }
 
 const textcmd = @import("text.zig");
