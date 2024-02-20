@@ -11,6 +11,7 @@ const command = @import("command.zig");
 
 const draw = @import("draw_screen.zig");
 pub const draw_screen = draw.draw_screen;
+pub const update_cursor = draw.update_cursor;
 
 pub const cmd = @import("screen_command.zig");
 pub const input = @import("input.zig");

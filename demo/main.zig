@@ -12,6 +12,8 @@ pub fn main() !void {
     var orig_x: usize = 0;
     var orig_y: usize = 0;
 
+    var rerender: bool = true;
+
     while (true) {
         const char = try curses.input.read_char(screen);
 
@@ -28,6 +30,8 @@ pub fn main() !void {
                 } else {
                     curses.cmd.print_char(screen, @intFromEnum(char));
                 }
+
+                rerender = true;
             },
             .Newline, .Carriage => {
                 if (is_command) {
@@ -44,15 +48,14 @@ pub fn main() !void {
                 } else {
                     curses.cmd.new_line(screen);
                 }
+
+                rerender = true;
             },
             .Backspace, .Delete => {
                 if (screen.cursor_x == 0 and screen.cursor_y != 0) {
                     curses.cmd.move_cursor(screen, screen.columns - 1, screen.cursor_y - 1);
                     curses.cmd.delete_at_cursor(screen);
-                    continue;
-                }
-
-                if (screen.cursor_y == screen.lines - 1) {
+                } else if (screen.cursor_y == screen.lines - 1) {
                     if (screen.cursor_x != 1) {
                         curses.cmd.cursor_left(screen);
                         curses.cmd.delete_at_cursor(screen);
@@ -61,6 +64,8 @@ pub fn main() !void {
                     curses.cmd.cursor_left(screen);
                     curses.cmd.delete_at_cursor(screen);
                 }
+
+                rerender = true;
             },
             .ArrowUp => {
                 if (!is_command) curses.cmd.cursor_up(screen);
@@ -75,10 +80,17 @@ pub fn main() !void {
                 if (!is_command) curses.cmd.cursor_right(screen);
             },
             else => {
+                rerender = true;
                 curses.cmd.print_char(screen, @intFromEnum(char));
             },
         }
 
-        try curses.draw_screen(screen);
+        if (rerender) {
+            try curses.draw_screen(screen);
+        } else {
+            curses.update_cursor(screen);
+        }
+
+        rerender = false;
     }
 }

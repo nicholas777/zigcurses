@@ -68,3 +68,7 @@ pub fn draw_screen(screen: *curses.Screen) !void {
 
     try command.load_cursor(screen);
 }
+
+pub fn update_cursor(screen: *curses.Screen) void {
+    command.move_cursor(screen, @intCast(screen.cursor_x), @intCast(screen.cursor_y)) catch return;
+}
