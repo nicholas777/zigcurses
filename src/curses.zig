@@ -28,6 +28,7 @@ pub const Terminal = struct {
     color_mode: common.ColorMode = undefined,
     automatic_wrap: bool = false,
     orig_termios: std.os.system.termios,
+    curr_termios: std.os.system.termios,
     tty_file: std.fs.File,
 };
 
@@ -77,6 +78,8 @@ fn prepare_terminal_posix(term: *Terminal) !void {
 
     // Save the edited termios
     try std.os.tcsetattr(term.tty_file.handle, .FLUSH, termios);
+
+    term.curr_termios = termios;
 
     if (command.checkCapability(term.tinfo, tinfo_fields.str_save_cursor) == .Absent or
         command.checkCapability(term.tinfo, tinfo_fields.str_enter_ca_mode) == .Absent)

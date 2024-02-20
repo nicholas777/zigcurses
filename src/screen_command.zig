@@ -7,6 +7,8 @@ pub const clear_line = clearcmd.clear_line;
 pub const clear_left = clearcmd.clear_left;
 pub const clear_right = clearcmd.clear_right;
 pub const clear_area = clearcmd.clear_area;
+pub const clear_at_cursor = clearcmd.clear_at_cursor;
+pub const delete_at_cursor = clearcmd.delete_at_cursor;
 
 const cursorcmd = @import("screen/cursor.zig");
 pub const move_cursor = cursorcmd.move_cursor;
@@ -20,6 +22,14 @@ const printcmd = @import("screen/print.zig");
 pub const print = printcmd.print;
 pub const print_at = printcmd.print_at;
 pub const print_char = printcmd.print_char;
+pub const print_char_at = printcmd.print_char_at;
+
+const readcmd = @import("screen/read.zig");
+pub const read_char = readcmd.read_char;
+pub const read_line = readcmd.read_line;
+
+/// This may not span over different lines
+pub const read_range = readcmd.read_range;
 
 const colorcmd = @import("screen/color.zig");
 pub const set_foreground = colorcmd.set_foreground;

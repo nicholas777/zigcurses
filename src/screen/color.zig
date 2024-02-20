@@ -37,18 +37,15 @@ pub fn color_range(screen: *curses.Screen, length: usize, bg: curses.Color, fg: 
     } else if (left_on_line == length) {
         if (screen.cursor_y + 1 >= screen.lines) {
             screen.cursor_x += length;
-            std.debug.print("Hello 1, x: {}\n", .{screen.cursor_x});
         } else {
             screen.cursor_x = 0;
             screen.cursor_y += 1;
-            std.debug.print("Hello 2\n", .{});
         }
     } else {
         screen.cursor_y += length / screen.columns + 1;
         screen.cursor_x = length - left_on_line;
     }
 
-    std.debug.print("X: {}, y: {}\n", .{ screen.cursor_x, screen.cursor_y });
     set_colors(screen, old_bg, old_fg);
     cmd.move_cursor(screen, old_x, old_y);
 }

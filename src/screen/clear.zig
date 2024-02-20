@@ -9,7 +9,7 @@ pub fn clear_screen(screen: *curses.Screen) void {
     }
 }
 
-pub fn clear_line(screen: *curses.Screen, line: u32) void {
+pub fn clear_line(screen: *curses.Screen, line: usize) void {
     if (line + 1 > screen.buffer.len) return;
     var i: usize = 0;
     while (i < screen.buffer[line].len) : (i += 1) {
@@ -51,4 +51,12 @@ pub fn clear_area(screen: *curses.Screen, x: usize, y: usize, width: usize, heig
             screen.buffer[i][j] = ' ';
         }
     }
+}
+
+pub fn clear_at_cursor(screen: *curses.Screen) void {
+    screen.buffer[screen.cursor_y][screen.cursor_x] = ' ';
+}
+
+pub fn delete_at_cursor(screen: *curses.Screen) void {
+    screen.buffer[screen.cursor_y][screen.cursor_x] &= 0xff00 | ' ';
 }

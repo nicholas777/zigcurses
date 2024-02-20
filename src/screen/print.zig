@@ -22,6 +22,15 @@ pub fn print_char(screen: *curses.Screen, char: u8) void {
     }
 }
 
+pub fn print_char_at(screen: *curses.Screen, char: u8, x: usize, y: usize) void {
+    if (x + 1 > screen.columns) return;
+    if (y + 1 > screen.lines) return;
+
+    screen.cursor_x = x;
+    screen.cursor_y = y;
+    print_char(screen, char);
+}
+
 pub fn print(screen: *curses.Screen, msg: []const u8) void {
     for (msg) |char| {
         print_char(screen, char);
