@@ -9,6 +9,8 @@ pub fn main() !void {
     defer curses.deinit(alloc, screen);
 
     var is_command: bool = false;
+    var orig_x: usize = 0;
+    var orig_y: usize = 0;
 
     while (true) {
         const char = try curses.input.read_char(screen);
@@ -16,6 +18,9 @@ pub fn main() !void {
         switch (char) {
             .Colon => {
                 if (!is_command) {
+                    orig_x = screen.cursor_x;
+                    orig_y = screen.cursor_y;
+
                     curses.cmd.color_line(screen, screen.lines - 1, .Magenta, .White);
                     curses.cmd.print_char_at(screen, ':', 0, screen.lines - 1);
 
@@ -32,15 +37,21 @@ pub fn main() !void {
 
                     if (std.mem.eql(u8, command, "q")) break;
 
-                    is_command = false;
-
                     alloc.free(command);
+
+                    is_command = false;
+                    curses.cmd.move_cursor(screen, orig_x, orig_y);
                 } else {
-                    curses.cmd.print_char(screen, @intFromEnum(char));
-                    curses.cmd.cursor_home(screen);
+                    curses.cmd.new_line(screen);
                 }
             },
             .Backspace, .Delete => {
+                if (screen.cursor_x == 0 and screen.cursor_y != 0) {
+                    curses.cmd.move_cursor(screen, screen.columns - 1, screen.cursor_y - 1);
+                    curses.cmd.delete_at_cursor(screen);
+                    continue;
+                }
+
                 if (screen.cursor_y == screen.lines - 1) {
                     if (screen.cursor_x != 1) {
                         curses.cmd.cursor_left(screen);
@@ -51,7 +62,18 @@ pub fn main() !void {
                     curses.cmd.delete_at_cursor(screen);
                 }
             },
-            .ArrowUp => {},
+            .ArrowUp => {
+                if (!is_command) curses.cmd.cursor_up(screen);
+            },
+            .ArrowDown => {
+                if (!is_command) curses.cmd.cursor_down(screen);
+            },
+            .ArrowLeft => {
+                if (!is_command) curses.cmd.cursor_left(screen);
+            },
+            .ArrowRight => {
+                if (!is_command) curses.cmd.cursor_right(screen);
+            },
             else => {
                 curses.cmd.print_char(screen, @intFromEnum(char));
             },

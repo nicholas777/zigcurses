@@ -1,6 +1,8 @@
 pub const set_color = (1 << 7) << 8;
 pub const set_bold = (1 << 6) << 8;
 
+const curses = @import("curses.zig");
+
 const clearcmd = @import("screen/clear.zig");
 pub const clear_screen = clearcmd.clear_screen;
 pub const clear_line = clearcmd.clear_line;
@@ -17,6 +19,12 @@ pub const cursor_left = cursorcmd.cursor_left;
 pub const cursor_right = cursorcmd.cursor_right;
 pub const cursor_up = cursorcmd.cursor_up;
 pub const cursor_down = cursorcmd.cursor_down;
+
+pub fn new_line(screen: *curses.Screen) void {
+    screen.cursor_x = 0;
+    screen.cursor_y += 1;
+    if (screen.cursor_y >= screen.lines) screen.cursor_y = 0;
+}
 
 const printcmd = @import("screen/print.zig");
 pub const print = printcmd.print;
