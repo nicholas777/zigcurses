@@ -18,9 +18,7 @@ pub fn build(b: *std.Build) void {
     }
 
     const lib_module = b.addModule("zigcurses", .{
-        .target = target,
-        .optimize = optimize,
-        .root_source_file = .{ .path = "src/curses.zig" },
+        .source_file = .{ .path = "src/curses.zig" },
     });
 
     const build_tools = b.option(bool, "build-tools", "Build the utilities") orelse true;
@@ -33,11 +31,11 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
         });
 
-        exe.root_module.addImport("curses", lib_module);
+        exe.addModule("curses", lib_module);
 
         const options = b.addOptions();
         options.addOption([]const u8, "version", "0.0.1");
-        exe.root_module.addOptions("config", options);
+        exe.addOptions("config", options);
 
         b.installArtifact(exe);
     }
@@ -49,7 +47,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    demo.root_module.addImport("curses", lib_module);
+    demo.addModule("curses", lib_module);
     b.installArtifact(demo);
 
     const run_cmd = b.addRunArtifact(demo);

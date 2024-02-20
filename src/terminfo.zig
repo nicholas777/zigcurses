@@ -87,19 +87,19 @@ pub fn parseTerminfo(alloc: std.mem.Allocator, data: []const u8) TerminfoParseEr
 
     // Check for the magic
     // For reference: _nc_read_termtype in libncurses
-    if (std.mem.bytesAsValue(u16, data.ptr).* == TerminfoMagic16) {
+    if (std.mem.bytesAsValue(u16, data.ptr[0..2]).* == TerminfoMagic16) {
         terminfo.wordsize = .Bits16;
-    } else if (std.mem.bytesAsValue(u16, data.ptr).* == TerminfoMagic32) {
+    } else if (std.mem.bytesAsValue(u16, data.ptr[0..2]).* == TerminfoMagic32) {
         terminfo.wordsize = .Bits32;
     } else {
         return TerminfoParseError.InvalidMagic;
     }
 
-    const name_size: u16 = std.mem.bytesAsValue(u16, data.ptr + 2).*;
-    const bool_count: u16 = std.mem.bytesAsValue(u16, data.ptr + 4).*;
-    const num_count: u16 = std.mem.bytesAsValue(u16, data.ptr + 6).*;
-    const str_count: u16 = std.mem.bytesAsValue(u16, data.ptr + 8).*;
-    const str_size: u16 = std.mem.bytesAsValue(u16, data.ptr + 10).*;
+    const name_size: u16 = std.mem.bytesAsValue(u16, (data.ptr + 2)[0..2]).*;
+    const bool_count: u16 = std.mem.bytesAsValue(u16, (data.ptr + 4)[0..2]).*;
+    const num_count: u16 = std.mem.bytesAsValue(u16, (data.ptr + 6)[0..2]).*;
+    const str_count: u16 = std.mem.bytesAsValue(u16, (data.ptr + 8)[0..2]).*;
+    const str_size: u16 = std.mem.bytesAsValue(u16, (data.ptr + 10)[0..2]).*;
     var offset: u32 = 12;
 
     terminfo.str_table = alloc.alloc(u8, str_size + name_size + 1) catch return TerminfoParseError.OutOfMemory;
@@ -121,7 +121,7 @@ pub fn parseTerminfo(alloc: std.mem.Allocator, data: []const u8) TerminfoParseEr
     const num_size: u32 = if (terminfo.wordsize == .Bits32) 4 else 2;
     terminfo.numbers = alloc.alloc(i16, tinfo.num_count) catch return error.OutOfMemory;
     var num_buf: [4096]i8 = undefined;
-    std.mem.copyForwards(i8, &num_buf, @ptrCast(data[offset .. offset + num_count * num_size]));
+    std.mem.copyForwards(i8, &num_buf, @as([]const i8, @ptrCast(data[offset .. offset + num_count * num_size])));
 
     var i: u32 = 0;
     if (terminfo.wordsize == .Bits16) {
