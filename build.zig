@@ -42,26 +42,26 @@ pub fn build(b: *std.Build) void {
         b.installArtifact(exe);
     }
 
-    // const demo = b.addExecutable(.{
-    // .name = "demo",
-    // .root_source_file = .{ .path = "demo/main.zig" },
-    // .target = target,
-    // .optimize = optimize,
-    // });
+    const demo = b.addExecutable(.{
+        .name = "demo",
+        .root_source_file = .{ .path = "demo/main.zig" },
+        .target = target,
+        .optimize = optimize,
+    });
 
-    // demo.root_module.addImport("curses", lib_module);
-    // b.installArtifact(demo);
+    demo.root_module.addImport("curses", lib_module);
+    b.installArtifact(demo);
 
-    // const run_cmd = b.addRunArtifact(demo);
+    const run_cmd = b.addRunArtifact(demo);
 
-    // run_cmd.step.dependOn(b.getInstallStep());
+    run_cmd.step.dependOn(b.getInstallStep());
 
-    // if (b.args) |args| {
-    // run_cmd.addArgs(args);
-    // }
+    if (b.args) |args| {
+        run_cmd.addArgs(args);
+    }
 
-    // const run_step = b.step("run", "Run the app");
-    // run_step.dependOn(&run_cmd.step);
+    const run_step = b.step("run", "Run the app");
+    run_step.dependOn(&run_cmd.step);
 
     const unit_tests = b.addTest(.{
         .root_source_file = .{ .path = "src/curses.zig" },

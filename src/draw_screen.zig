@@ -5,14 +5,14 @@ const cmd = curses.cmd;
 const std = @import("std");
 
 pub fn draw_screen(screen: *curses.Screen) !void {
-    const orig_x = screen.cursor_x;
-    const orig_y = screen.cursor_y;
-
     var is_bold = false;
 
     var buffered = std.io.bufferedWriter(std.io.getStdOut().writer());
     const bw = buffered.writer();
 
+    try command.move_cursor(screen, @intCast(screen.cursor_x), @intCast(screen.cursor_y));
+
+    try command.save_cursor(screen);
     try command.cursor_home(screen);
 
     var i: usize = 0;
@@ -66,5 +66,5 @@ pub fn draw_screen(screen: *curses.Screen) !void {
 
     try buffered.flush();
 
-    try command.move_cursor(screen, @intCast(orig_x), @intCast(orig_y));
+    try command.load_cursor(screen);
 }

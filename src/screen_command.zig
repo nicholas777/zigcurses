@@ -19,6 +19,7 @@ pub const cursor_down = cursorcmd.cursor_down;
 const printcmd = @import("screen/print.zig");
 pub const print = printcmd.print;
 pub const print_at = printcmd.print_at;
+pub const print_char = printcmd.print_char;
 
 const colorcmd = @import("screen/color.zig");
 pub const set_foreground = colorcmd.set_foreground;

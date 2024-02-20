@@ -135,7 +135,12 @@ pub fn main() !void {
                 });
             },
             .String, .StringLong => {
-                const str = curses.util.getFieldString(term.tinfo, query.?, fieldtype.? == .StringLong) orelse "Null";
+                const str = curses.util.getFieldString(
+                    term.tinfo,
+                    query.?,
+                    fieldtype.? == .StringLong,
+                ) orelse "Null";
+
                 var is_escape_seq: bool = false;
 
                 if (str[0] == 0o33) is_escape_seq = true;

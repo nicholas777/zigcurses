@@ -2,12 +2,24 @@ const std = @import("std");
 const curses = @import("curses");
 
 pub fn main() !void {
-    const stdout = std.io.getStdOut().writer();
-    _ = stdout;
-
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const alloc = gpa.allocator();
 
-    try curses.init(alloc);
-    defer curses.deinit(alloc);
+    const screen = try curses.init(alloc, null);
+    defer curses.deinit(alloc, screen);
+
+    while (true) {
+        const char = try curses.input.read_char(screen);
+
+        switch (char) {
+            'q' => {
+                break;
+            },
+            else => {
+                curses.cmd.print_char(screen, char);
+            },
+        }
+
+        try curses.draw_screen(screen);
+    }
 }

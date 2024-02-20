@@ -21,6 +21,20 @@ pub fn show_cursor(screen: *curses.Screen) CommandError!void {
     _ = std.io.getStdOut().write(term.tinfo.strings[fields.str_cursor_normal].?) catch return error.IOError;
 }
 
+pub fn save_cursor(screen: *curses.Screen) CommandError!void {
+    if (command.checkCapability(screen.term.tinfo, fields.str_save_cursor) == .Absent)
+        return error.CapabilityUnsupported;
+
+    _ = std.io.getStdOut().write(screen.term.tinfo.strings[fields.str_save_cursor].?) catch return error.IOError;
+}
+
+pub fn load_cursor(screen: *curses.Screen) CommandError!void {
+    if (command.checkCapability(screen.term.tinfo, fields.str_restore_cursor) == .Absent)
+        return error.CapabilityUnsupported;
+
+    _ = std.io.getStdOut().write(screen.term.tinfo.strings[fields.str_restore_cursor].?) catch return error.IOError;
+}
+
 pub fn move_cursor(screen: *curses.Screen, new_x: i32, new_y: i32) CommandError!void {
     const term = screen.term;
     if (command.checkCapability(term.tinfo, fields.str_cursor_address) == .Absent)
@@ -28,7 +42,7 @@ pub fn move_cursor(screen: *curses.Screen, new_x: i32, new_y: i32) CommandError!
 
     command.parameterizedCommand(
         term.tinfo.strings[fields.str_cursor_address].?,
-        &.{ .{ .number = new_x }, .{ .number = new_y } },
+        &.{ .{ .number = new_y }, .{ .number = new_x } },
     ) catch return error.IOError;
 }
 

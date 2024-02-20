@@ -366,6 +366,8 @@ pub const print_italic = printcmd.print_italic;
 const curscmd = @import("commands/cursor.zig");
 pub const hide_cursor = curscmd.hide_cursor;
 pub const show_cursor = curscmd.show_cursor;
+pub const save_cursor = curscmd.save_cursor;
+pub const load_cursor = curscmd.load_cursor;
 
 pub const move_cursor = curscmd.move_cursor;
 pub const cursor_home = curscmd.cursor_home;
