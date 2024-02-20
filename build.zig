@@ -21,6 +21,8 @@ pub fn build(b: *std.Build) void {
         .source_file = .{ .path = "src/curses.zig" },
     });
 
+    b.modules.put("curses", lib_module) catch unreachable;
+
     const build_tools = b.option(bool, "build-tools", "Build the utilities") orelse true;
 
     if (build_tools) {
