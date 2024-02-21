@@ -34,13 +34,17 @@ pub const Terminal = struct {
 };
 
 pub const Screen = struct {
-    columns: usize,
-    lines: usize,
     term: *Terminal,
     buffer: [][]u32 = undefined,
     buffer_allocated: bool = false,
+
+    columns: usize,
+    lines: usize,
     cursor_x: usize,
     cursor_y: usize,
+    saved_x: usize,
+    saved_y: usize,
+
     text_attribs: [9]u8 = .{0} ** 9,
     current_bg: Color = Color.Black,
     current_fg: Color = Color.White,
@@ -180,6 +184,8 @@ pub fn setup_screen(alloc: std.mem.Allocator, terminal: *Terminal) !*Screen {
     screen.cursor_y = 0;
     screen.current_bg = .Black;
     screen.current_fg = .White;
+    screen.saved_x = 0;
+    screen.saved_y = 0;
 
     const lines = std.os.getenv("LINES");
     const cols = std.os.getenv("COLUMNS");

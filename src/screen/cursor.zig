@@ -27,3 +27,13 @@ pub fn cursor_left(screen: *curses.Screen) void {
 pub fn cursor_right(screen: *curses.Screen) void {
     if (screen.cursor_x != screen.columns - 1) screen.cursor_x += 1;
 }
+
+pub fn save_cursor(screen: *curses.Screen) void {
+    screen.saved_x = screen.cursor_x;
+    screen.saved_y = screen.cursor_y;
+}
+
+pub fn load_cursor(screen: *curses.Screen) void {
+    screen.cursor_x = screen.saved_x;
+    screen.cursor_y = screen.saved_y;
+}

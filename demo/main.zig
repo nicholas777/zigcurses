@@ -85,7 +85,7 @@ pub fn main() !void {
             },
         }
 
-        if (rerender) {
+        if (true) {
             try curses.draw_screen(screen);
         } else {
             curses.update_cursor(screen);

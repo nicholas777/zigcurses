@@ -20,6 +20,9 @@ pub const cursor_right = cursorcmd.cursor_right;
 pub const cursor_up = cursorcmd.cursor_up;
 pub const cursor_down = cursorcmd.cursor_down;
 
+pub const save_cursor = cursorcmd.save_cursor;
+pub const load_cursor = cursorcmd.load_cursor;
+
 pub fn new_line(screen: *curses.Screen) void {
     screen.cursor_x = 0;
     screen.cursor_y += 1;
