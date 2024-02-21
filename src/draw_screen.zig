@@ -10,6 +10,9 @@ pub fn draw_screen(screen: *curses.Screen) !void {
     var buffered = std.io.bufferedWriter(std.io.getStdOut().writer());
     const bw = buffered.writer();
 
+    // Prevent flickering of cursor in the corner
+    try command.hide_cursor(screen);
+
     try command.move_cursor(screen, @intCast(screen.cursor_x), @intCast(screen.cursor_y));
 
     try command.save_cursor(screen);
@@ -67,6 +70,7 @@ pub fn draw_screen(screen: *curses.Screen) !void {
     try buffered.flush();
 
     try command.load_cursor(screen);
+    try command.show_cursor(screen);
 }
 
 pub fn update_cursor(screen: *curses.Screen) void {
