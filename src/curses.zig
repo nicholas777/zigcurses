@@ -50,14 +50,13 @@ pub const Screen = struct {
     current_fg: Color = Color.White,
 };
 
-// https://zig.news/lhp/want-to-create-a-tui-application-the-basics-of-uncooked-terminal-io-17gm
+// man 3 termios
 fn prepare_terminal_posix(term: *Terminal) !void {
     term.tty_file = try std.fs.cwd().openFile("/dev/tty", .{ .mode = .read_write });
 
     var termios = try std.os.tcgetattr(term.tty_file.handle);
     term.orig_termios = termios;
 
-    // man 3 termios
     termios.lflag &= ~@as(
         std.os.system.tcflag_t,
         std.os.system.ECHO | std.os.system.ICANON | std.os.system.ISIG | std.os.system.IEXTEN,

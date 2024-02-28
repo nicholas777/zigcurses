@@ -21,6 +21,8 @@ pub fn draw_screen(screen: *curses.Screen) !void {
     var i: usize = 0;
     while (i < screen.buffer.len - 1) : (i += 1) {
         for (screen.buffer[i]) |char| {
+            if (char & 0x00ff == '\n') break;
+
             if (char & 0xFF00 != 0) {
                 try buffered.flush();
 
