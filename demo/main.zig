@@ -9,88 +9,64 @@ pub fn main() !void {
     defer curses.deinit(alloc, screen);
 
     var is_command: bool = false;
+    _ = is_command;
     var orig_x: usize = 0;
+    _ = orig_x;
     var orig_y: usize = 0;
+    _ = orig_y;
 
     var rerender: bool = true;
+    _ = rerender;
 
     while (true) {
         const char = try curses.input.read_char(screen);
 
         switch (char) {
-            .Colon => {
-                if (!is_command) {
-                    orig_x = screen.cursor_x;
-                    orig_y = screen.cursor_y;
-
-                    curses.cmd.color_line(screen, screen.lines - 1, .Magenta, .White);
-                    curses.cmd.print_char_at(screen, ':', 0, screen.lines - 1);
-
-                    is_command = true;
-                } else {
-                    curses.cmd.print_char(screen, @intFromEnum(char));
-                }
-
-                rerender = true;
+            .key => |key| {
+                handle_key(screen, key);
             },
-            .Newline, .Carriage => {
-                if (is_command) {
-                    const command = try curses.cmd.read_range(screen, alloc, 1, screen.lines - 1, screen.cursor_x - 1);
-                    curses.cmd.cursor_home(screen);
-                    curses.cmd.clear_line(screen, screen.lines - 1);
+            .ascii => |c| {
+                if (c == 'q') break;
 
-                    if (std.mem.eql(u8, command, "q")) break;
-
-                    alloc.free(command);
-
-                    is_command = false;
-                    curses.cmd.move_cursor(screen, orig_x, orig_y);
-                } else {
-                    curses.cmd.new_line(screen);
-                }
-
-                rerender = true;
-            },
-            .Backspace, .Delete => {
-                if (screen.cursor_x == 0 and screen.cursor_y != 0) {
-                    curses.cmd.move_cursor(screen, screen.columns - 1, screen.cursor_y - 1);
-                    curses.cmd.delete_at_cursor(screen);
-                } else if (screen.cursor_y == screen.lines - 1) {
-                    if (screen.cursor_x != 1) {
-                        curses.cmd.cursor_left(screen);
-                        curses.cmd.delete_at_cursor(screen);
-                    }
-                } else {
+                if (c == @intFromEnum(curses.input.AsciiCode.Backspace) or
+                    c == @intFromEnum(curses.input.AsciiCode.Delete))
+                {
                     curses.cmd.cursor_left(screen);
                     curses.cmd.delete_at_cursor(screen);
+                } else {
+                    curses.cmd.print_char(screen, c);
                 }
-
-                rerender = true;
             },
-            .ArrowUp => {
-                if (!is_command) curses.cmd.cursor_up(screen);
+            .utf8 => |codepoint| {
+                _ = codepoint;
             },
-            .ArrowDown => {
-                if (!is_command) curses.cmd.cursor_down(screen);
+            .escape => |key| {
+                curses.cmd.print(screen, "Escape + ");
+                curses.cmd.print_char(screen, key);
             },
-            .ArrowLeft => {
-                if (!is_command) curses.cmd.cursor_left(screen);
-            },
-            .ArrowRight => {
-                if (!is_command) curses.cmd.cursor_right(screen);
-            },
-            else => {
-                rerender = true;
-                curses.cmd.print_char(screen, @intFromEnum(char));
+            .control => |key| {
+                curses.cmd.print(screen, "Ctrl + ");
+                curses.cmd.print_char(screen, key);
             },
         }
 
-        if (true) {
-            try curses.draw_screen(screen);
-        } else {
-            curses.update_cursor(screen);
-        }
+        try curses.draw_screen(screen);
+    }
+}
 
-        rerender = false;
+fn handle_key(screen: *curses.Screen, key: curses.input.Keycode) void {
+    switch (key) {
+        .ArrowUp => {
+            curses.cmd.cursor_up(screen);
+        },
+        .ArrowDown => {
+            curses.cmd.cursor_down(screen);
+        },
+        .ArrowLeft => {
+            curses.cmd.cursor_left(screen);
+        },
+        .ArrowRight => {
+            curses.cmd.cursor_right(screen);
+        },
     }
 }

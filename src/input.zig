@@ -1,22 +1,41 @@
 const std = @import("std");
 const curses = @import("curses.zig");
 
-pub const Keycode = enum(u8) {
+pub const AsciiCode = enum(u8) {
     // Control characters
     Null = 0,
+    StartHeading = 1,
+    StartText = 2,
+    EndText = 3,
+    EndTransmission = 4,
+    Enquiry = 5,
+    Acknowledge = 6,
     Bell = 7,
     Backspace = 8,
     Tab = 9,
     Newline = 10,
+    VerticalTab = 11,
+    FormFeed = 12,
     Carriage = 13,
+    ShiftOut = 14,
+    ShiftIn = 15,
+    DataLink = 16,
+    Xon = 17,
+    ControlTwo = 18,
+    Xoff = 19,
+    Control4 = 20,
+    AckNeg = 21,
+    Idle = 22,
+    EndOfBlock = 23,
+    Cancel = 24,
+    EndOfMedium = 25,
+    Substitute = 26,
     Escape = 27,
+    FileSeparator = 28,
+    GroupSeparator = 29,
+    RecordSeparator = 30,
+    UnitSeparator = 31,
     Delete = 127,
-
-    // Non-Ascii custom characters
-    ArrowLeft = 1,
-    ArrowRight = 2,
-    ArrowDown = 3,
-    ArrowUp = 4,
 
     Space = 32,
     ExclMark = 33,
@@ -119,48 +138,67 @@ pub const Keycode = enum(u8) {
     Tilda = 126,
 };
 
-const specialKeys = std.ComptimeStringMap(Keycode, .{
-    .{ "[A", .ArrowUp },
-    .{ "OA", .ArrowUp },
-    .{ "[B", .ArrowDown },
-    .{ "OB", .ArrowDown },
-    .{ "[C", .ArrowRight },
-    .{ "OC", .ArrowRight },
-    .{ "[D", .ArrowLeft },
-    .{ "OD", .ArrowLeft },
-});
-
 pub const InputError = error{
     UnsupportedKey,
+    ReadError,
+    InvalidUnicode,
 };
 
 const command = @import("command.zig");
 
-pub fn read_char(screen: *curses.Screen) !Keycode {
-    var buf: [1]u8 = undefined;
-    _ = try screen.term.tty_file.read(&buf);
+pub const Input = union(enum) {
+    ascii: u8,
+    utf8: u21,
+    control: u8, // Ctrl + key
+    key: Keycode,
 
-    if (buf[0] != 0x1b) {
-        return @enumFromInt(buf[0]);
-    } else {
-        screen.term.curr_termios.cc[std.os.system.V.TIME] = 1;
-        screen.term.curr_termios.cc[std.os.system.V.MIN] = 0;
-        try std.os.tcsetattr(screen.term.tty_file.handle, .NOW, screen.term.curr_termios);
+    // On some terminals you press escape and then another button registered as
+    // one character.
+    escape: u8,
+};
 
-        var buf2: [8]u8 = undefined;
-        const read = try screen.term.tty_file.read(&buf2);
+/// Various special keys not representable in ascii or unicode
+pub const Keycode = enum {
+    ArrowUp,
+    ArrowDown,
+    ArrowLeft,
+    ArrowRight,
+};
 
-        screen.term.curr_termios.cc[std.os.system.V.TIME] = 0;
-        screen.term.curr_termios.cc[std.os.system.V.MIN] = 1;
-        try std.os.tcsetattr(screen.term.tty_file.handle, .NOW, screen.term.curr_termios);
+const special_keys = std.ComptimeStringMap(Keycode, .{
+    .{ "[A", .ArrowUp },
+    .{ "[B", .ArrowDown },
+    .{ "[C", .ArrowRight },
+    .{ "[D", .ArrowLeft },
+});
 
-        if (read == 0) {
-            return .Escape;
+pub fn read_char(screen: *curses.Screen) InputError!Input {
+    var buf: [8]u8 = undefined;
+    const read = screen.term.tty_file.read(&buf) catch return InputError.ReadError;
+
+    if (read == 0) {
+        return InputError.ReadError;
+    } else if (read == 1) {
+        // https://en.wikipedia.org/wiki/Control_character#How_control_characters_map_to_keyboards
+        if (buf[0] < 32) {
+            return .{ .control = buf[0] + 0x40 };
         }
 
-        if (specialKeys.get(buf2[0..read])) |value| {
-            return value;
+        return .{ .ascii = buf[0] };
+    } else if (buf[0] == 0x1b) {
+        const key = special_keys.get(buf[1..read]);
+        if (key != null) {
+            return .{ .key = key.? };
         }
+
+        // For simplicity we will assume that it isn't an escape sequence
+        if (buf[1] != '[') {
+            return .{ .escape = buf[1] };
+        }
+    } else if (read <= 4) {
+        return .{
+            .utf8 = std.unicode.utf8Decode(buf[0..read]) catch return InputError.InvalidUnicode,
+        };
     }
 
     return InputError.UnsupportedKey;

@@ -57,22 +57,15 @@ fn prepare_terminal_posix(term: *Terminal) !void {
     var termios = try std.os.tcgetattr(term.tty_file.handle);
     term.orig_termios = termios;
 
-    //   ECHO: Stop the terminal from displaying pressed keys.
-    // ICANON: Disable canonical ("cooked") input mode. Allows us to read inputs
-    //         byte-wise instead of line-wise.
-    //   ISIG: Disable signals for Ctrl-C (SIGINT) and Ctrl-Z (SIGTSTP), so we
-    //         can handle them as "normal" escape sequences.
-    // IEXTEN: Disable input preprocessing. This allows us to handle Ctrl-V,
-    //         which would otherwise be intercepted by some terminals.
+    // man 3 termios
     termios.lflag &= ~@as(
         std.os.system.tcflag_t,
         std.os.system.ECHO | std.os.system.ICANON | std.os.system.ISIG | std.os.system.IEXTEN,
     );
 
-    // No idea what this is, but it is probably necessary
     termios.iflag &= ~@as(
         std.os.system.tcflag_t,
-        std.os.system.IXON | std.os.system.ICRNL | std.os.system.BRKINT | std.os.system.INPCK | std.os.system.ISTRIP,
+        std.os.system.IXON | std.os.system.INLCR | std.os.system.BRKINT | std.os.system.INPCK | std.os.system.ISTRIP,
     );
 
     termios.oflag &= ~@as(std.os.system.tcflag_t, std.os.system.OPOST);
