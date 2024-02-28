@@ -180,7 +180,11 @@ pub fn read_char(screen: *curses.Screen) InputError!Input {
         return InputError.ReadError;
     } else if (read == 1) {
         // https://en.wikipedia.org/wiki/Control_character#How_control_characters_map_to_keyboards
-        if (buf[0] < 32) {
+        if (buf[0] < 32 and
+            buf[0] != @intFromEnum(AsciiCode.Newline) and
+            buf[0] != @intFromEnum(AsciiCode.Tab) and
+            buf[0] != @intFromEnum(AsciiCode.Escape))
+        {
             return .{ .control = buf[0] + 0x40 };
         }
 

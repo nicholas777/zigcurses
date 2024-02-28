@@ -153,7 +153,7 @@ fn alloc_screen_buffer(alloc: std.mem.Allocator, screen: *Screen) !void {
 
         var j: usize = 0;
         while (j < screen.buffer[i].len) : (j += 1) {
-            screen.buffer[i][j] = ' ';
+            screen.buffer[i][j] = 0;
         }
     }
 
@@ -161,7 +161,7 @@ fn alloc_screen_buffer(alloc: std.mem.Allocator, screen: *Screen) !void {
     screen.buffer[screen.lines - 1] = try alloc.alloc(u32, screen.columns + 1);
     var j: usize = 0;
     while (j < screen.columns + 1) : (j += 1) {
-        screen.buffer[screen.lines - 1][j] = ' ';
+        screen.buffer[screen.lines - 1][j] = 0;
     }
 
     screen.buffer_allocated = true;
